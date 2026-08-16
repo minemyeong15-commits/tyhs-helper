@@ -279,7 +279,7 @@
             document.getElementById('questionInput').value = '';
         };
 
-        // --- 2. 분실물 센터 실시간 연동 (Storage 적용) ---
+        // --- 2. 분실물 센터 실시간 연동 (Storage 적용 완료) ---
         let lostData = [];
         onSnapshot(collection(db, "lostItems"), (snapshot) => {
             lostData = [];
@@ -335,15 +335,20 @@
             const location = document.getElementById('itemLocation').value;
             const file = document.getElementById('itemImage').files[0];
 
-            if (!file) return;
+            if (!file) {
+                alert("이미지 파일을 선택해주세요.");
+                return;
+            }
 
             try {
-                // 스토리지 업로드
+                // 1. Firebase Storage에 이미지 파일 업로드
                 const storageRef = ref(storage, 'images/' + Date.now() + '_' + file.name);
                 const snapshot = await uploadBytes(storageRef, file);
+                
+                // 2. 업로드된 파일의 다운로드 URL 가져오기
                 const imageUrl = await getDownloadURL(snapshot.ref);
 
-                // Firestore 저장
+                // 3. Firestore에 데이터(이름, 장소, 이미지 URL) 저장
                 await addDoc(collection(db, "lostItems"), { 
                     name, 
                     location, 
@@ -354,7 +359,7 @@
                 alert("성공적으로 등록되었습니다!");
                 document.getElementById('lostForm').reset();
             } catch (err) {
-                console.error("등록 실패:", err);
+                console.error("분실물 등록 실패:", err);
                 alert("등록 실패: " + err.message);
             }
         };
